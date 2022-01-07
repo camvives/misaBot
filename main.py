@@ -3,6 +3,7 @@ import datetime
 from Playlist import *
 from googleapiclient.discovery import build
 from Google import create_service
+from apscheduler.schedulers.blocking import BlockingScheduler
 
 CLIENT_SECRET_FILE = 'client_secret.json'
 API = 'youtube'
@@ -10,6 +11,7 @@ API_VERSION = 'v3'
 SCOPES = ['https://www.googleapis.com/auth/youtube']
 
 youtube = create_service(CLIENT_SECRET_FILE, API, API_VERSION, SCOPES)
+sched = BlockingScheduler()
 
 def delete_old_videos():
     request = youtube.playlistItems().list(
@@ -63,9 +65,9 @@ def add_today_videos():
             body = request
         ).execute()
 
+@sched.scheduled_job('cron', hour='15')
 def main():
     delete_old_videos()
     add_today_videos()
 
-if __name__ == "__main__":
-    main()
+sched.start()
