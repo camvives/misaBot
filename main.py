@@ -11,7 +11,7 @@ API_VERSION = 'v3'
 SCOPES = ['https://www.googleapis.com/auth/youtube']
 
 youtube = create_service(CLIENT_SECRET_FILE, API, API_VERSION, SCOPES)
-sched = BlockingScheduler()
+sched = BlockingScheduler(timezone="GMT")
 
 def delete_old_videos():
     request = youtube.playlistItems().list(
@@ -65,7 +65,7 @@ def add_today_videos():
             body = request
         ).execute()
 
-@sched.scheduled_job('cron', hour='15')
+@sched.scheduled_job('cron', hour='18')
 def main():
     delete_old_videos()
     add_today_videos()
