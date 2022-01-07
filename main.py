@@ -1,4 +1,6 @@
 
+import datetime
+from Playlist import *
 from googleapiclient.discovery import build
 from Google import create_service
 
@@ -9,18 +11,61 @@ SCOPES = ['https://www.googleapis.com/auth/youtube']
 
 youtube = create_service(CLIENT_SECRET_FILE, API, API_VERSION, SCOPES)
 
-my_playlist_id = 'PLfHkwilQ38SZ728xP0MoFPpq5FCo6uujk'
-
-
-def delete_videos_my_playlist():
-    response = youtube.playlistItems().list(
+def delete_old_videos():
+    request = youtube.playlistItems().list(
         part = 'contentDetails', 
-        playlistId = my_playlist_id,
+        playlistId = MY_PLAYLIST_ID,
         maxResults = 10
-    ).execute()
+    )
+    response = request.execute()
 
-    playlistItems = response['items']
+    playlist_items = response['items']
 
-    for item in playlistItems:
+    for item in playlist_items:
         youtube.playlistItems().delete(id=item['id']).execute()
 
+def add_today_videos():
+    date = str(datetime.datetime.now())
+    dt = date[:10] + "T00:00:00.000Z"
+
+    request = youtube.search().list(
+        part="id,snippet",
+        channelId=MAGDALA_CHANNEL_ID,
+        type='video',
+        publishedAfter=dt,
+        maxResults=10    
+    )
+    response = request.execute()
+
+    videos_to_send = []
+    keywords = ['Atardecer', 'Celebración']
+
+    for i in range(len(response)):
+        video_title = response['items'][i]['snippet']['title']
+        
+        if any(x in video_title for x in keywords):
+            videos_to_send.append(response['items'][i])
+
+
+    for video in videos_to_send:
+        request = {
+            'snippet': {
+                'playlistId': MY_PLAYLIST_ID,
+                'resourceId': {
+                    'kind': 'youtube#video',
+                    'videoId': video['id']['videoId']  
+                }
+            }
+        }
+
+        youtube.playlistItems().insert(
+            part='snippet',
+            body = request
+        ).execute()
+
+def main():
+    delete_old_videos()
+    add_today_videos()
+
+if __name__ == "__main__":
+    main()

@@ -6,3 +6,5 @@ token files/
 __pycache__/
 
 client_secret.json
+
+Playlist.py
