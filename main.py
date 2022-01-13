@@ -42,7 +42,7 @@ def add_today_videos():
     videos_to_send = []
     keywords = ['Atardecer', 'Celebración']
 
-    for i in range(len(response)):
+    for i in range(len(response['items'])):
         video_title = response['items'][i]['snippet']['title']
         
         if any(x in video_title for x in keywords):
@@ -69,5 +69,6 @@ def add_today_videos():
 def main():
     delete_old_videos()
     add_today_videos()
+
 
 sched.start()
